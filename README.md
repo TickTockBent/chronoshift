@@ -2,6 +2,8 @@
 
 A minimalist web application displaying current time across various historical and alternative timekeeping systems.
 
+**[Live Demo](https://ticktockbent.github.io/chronoshift/)**
+
 ## Features
 
 - **Multiple time systems**: Switch between different ways humanity has measured time
