@@ -7,6 +7,7 @@ A minimalist web application displaying current time across various historical a
 ## Features
 
 - **Multiple time systems**: Switch between different ways humanity has measured time
+- **Visual representations**: Analog clocks, progress bars, and rings for each system
 - **Live updates**: Each system updates at its natural interval
 - **Learn more links**: Discover the history behind each system
 - **Persistent selection**: Your preferred system is remembered
@@ -14,14 +15,14 @@ A minimalist web application displaying current time across various historical a
 
 ## Available Time Systems
 
-| System | Description |
-|--------|-------------|
-| **Standard Time** | Gregorian calendar with 24-hour time |
-| **Unix Epoch** | Seconds since January 1, 1970 UTC |
-| **Kiloseconds** | SI-prefix metric time (ks into the day) |
-| **Swatch Internet Time** | 1000 .beats per day, no time zones |
-| **French Republican** | Revolutionary calendar with decimal time |
-| **Holocene Era** | Human Era calendar (+10,000 years) |
+| System | Visual | Description |
+|--------|--------|-------------|
+| **Standard Time** | 12-hour clock | Gregorian calendar with 24-hour time |
+| **Unix Epoch** | — | Seconds since January 1, 1970 UTC |
+| **Kiloseconds** | Progress bar | SI-prefix metric time (ks into the day) |
+| **Swatch Internet Time** | Progress ring | 1000 .beats per day, no time zones |
+| **French Republican** | 10-hour clock | Revolutionary calendar with decimal time |
+| **Holocene Era** | — | Human Era calendar (+10,000 years) |
 
 ## Development
 

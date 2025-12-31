@@ -105,6 +105,61 @@ For educational breakdowns:
 }
 ```
 
+## Visual Elements (Optional)
+
+Time systems can include an optional visual representation displayed below the text. Three visual types are available:
+
+### ProgressBarVisual
+
+A horizontal bar showing progress through a cycle (good for metric systems):
+
+```typescript
+visual: {
+  type: 'progress-bar',
+  max: 86.4,  // Maximum value (e.g., kiloseconds in a day)
+  getValue(date: Date) {
+    const midnight = new Date(date);
+    midnight.setHours(0, 0, 0, 0);
+    return (date.getTime() - midnight.getTime()) / 1000000;
+  },
+},
+```
+
+### ProgressRingVisual
+
+A circular ring showing progress (good for cyclical systems like Swatch beats):
+
+```typescript
+visual: {
+  type: 'progress-ring',
+  max: 1000,  // Maximum value (e.g., 1000 beats)
+  getValue(date: Date) {
+    // Return current value (0 to max)
+    return calculateBeats(date);
+  },
+},
+```
+
+### ClockVisual
+
+An analog clock face with configurable divisions:
+
+```typescript
+visual: {
+  type: 'clock',
+  divisions: 12,  // 12 for standard, 10 for decimal
+  getHands(date: Date) {
+    return {
+      hour: hours,      // Position in terms of divisions (0-12 or 0-10)
+      minute: minutes,  // Position as 0-100
+      second: seconds,  // Position as 0-100 (optional)
+    };
+  },
+},
+```
+
+**Note:** For clocks, `minute` and `second` values should be normalized to 0-100 range regardless of the actual time system. The renderer uses this to calculate hand positions.
+
 ## Guidelines
 
 - **Accuracy**: Document any simplifications in your description or code comments
