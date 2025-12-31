@@ -6,6 +6,7 @@ const standard: TimeSystemDefinition = {
   description: 'Gregorian calendar with 24-hour time',
   category: 'standard',
   tickInterval: 1000,
+  learnMoreUrl: 'https://en.wikipedia.org/wiki/Gregorian_calendar',
 
   format(date: Date): SplitDisplay {
     return {

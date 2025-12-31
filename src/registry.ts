@@ -1,8 +1,20 @@
 import type { TimeSystemDefinition } from './types';
 
 import standard from './systems/standard';
+import epochSeconds from './systems/epoch-seconds';
+import kiloseconds from './systems/kiloseconds';
+import swatchBeats from './systems/swatch-beats';
+import decimalFrench from './systems/decimal-french';
+import holocene from './systems/holocene';
 
-const systems: TimeSystemDefinition[] = [standard];
+const systems: TimeSystemDefinition[] = [
+  standard,
+  epochSeconds,
+  kiloseconds,
+  swatchBeats,
+  decimalFrench,
+  holocene,
+];
 
 const registry = new Map<string, TimeSystemDefinition>();
 

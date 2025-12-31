@@ -21,6 +21,9 @@ export interface TimeSystemDefinition {
   /** Update interval in ms. Default 1000. Use 86.4 for Swatch, etc. */
   tickInterval?: number;
 
+  /** URL to learn more about this time system */
+  learnMoreUrl?: string;
+
   /** The core transformation function */
   format(date: Date): TimeDisplay;
 }
