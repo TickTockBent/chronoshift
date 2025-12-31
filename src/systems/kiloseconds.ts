@@ -8,6 +8,16 @@ const kiloseconds: TimeSystemDefinition = {
   tickInterval: 1000,
   learnMoreUrl: 'https://en.wikipedia.org/wiki/Metric_time',
 
+  visual: {
+    type: 'progress-bar',
+    max: 86.4, // kiloseconds in a day
+    getValue(date: Date) {
+      const midnight = new Date(date);
+      midnight.setHours(0, 0, 0, 0);
+      return (date.getTime() - midnight.getTime()) / 1000000;
+    },
+  },
+
   format(date: Date): UnifiedDisplay {
     const midnight = new Date(date);
     midnight.setHours(0, 0, 0, 0);

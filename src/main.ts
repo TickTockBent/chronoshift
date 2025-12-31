@@ -1,8 +1,10 @@
 import { getAllSystems, getSystem, getDefaultSystem } from './registry';
 import { render } from './renderer';
+import { renderVisual, clearVisual } from './visual-renderer';
 import './styles/main.css';
 
 const selector = document.getElementById('system-selector') as HTMLSelectElement;
+const visualContainer = document.getElementById('time-visual') as HTMLElement;
 const display = document.getElementById('time-display') as HTMLElement;
 const learnMoreLink = document.getElementById('learn-more') as HTMLAnchorElement;
 
@@ -25,6 +27,10 @@ function tick(): void {
   const now = new Date();
   const output = currentSystem.format(now);
   render(output, display);
+
+  if (currentSystem.visual) {
+    renderVisual(currentSystem.visual, now, visualContainer);
+  }
 }
 
 function updateLearnMoreLink(): void {
@@ -39,6 +45,9 @@ function updateLearnMoreLink(): void {
 function switchSystem(id: string): void {
   const sys = getSystem(id);
   if (!sys) return;
+
+  // Clear previous visual when switching systems
+  clearVisual(visualContainer);
 
   currentSystem = sys;
   clearInterval(tickHandle);

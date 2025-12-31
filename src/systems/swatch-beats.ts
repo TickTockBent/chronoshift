@@ -1,5 +1,19 @@
 import type { TimeSystemDefinition, UnifiedDisplay } from '../types';
 
+function getBeats(date: Date): number {
+  // Convert to Biel Mean Time (UTC+1)
+  const utcMs = date.getTime() + date.getTimezoneOffset() * 60000;
+  const bielMs = utcMs + 3600000;
+
+  // Calculate milliseconds since midnight in Biel
+  const bielDate = new Date(bielMs);
+  const midnight = new Date(bielDate);
+  midnight.setUTCHours(0, 0, 0, 0);
+
+  const msIntoDay = bielMs - midnight.getTime();
+  return msIntoDay / 86400; // 86400ms = 1 beat (return fractional for smooth progress)
+}
+
 const swatchBeats: TimeSystemDefinition = {
   id: 'swatch-beats',
   name: 'Swatch Internet Time',
@@ -8,18 +22,16 @@ const swatchBeats: TimeSystemDefinition = {
   tickInterval: 86.4,
   learnMoreUrl: 'https://en.wikipedia.org/wiki/Swatch_Internet_Time',
 
+  visual: {
+    type: 'progress-ring',
+    max: 1000,
+    getValue(date: Date) {
+      return getBeats(date);
+    },
+  },
+
   format(date: Date): UnifiedDisplay {
-    // Convert to Biel Mean Time (UTC+1)
-    const utcMs = date.getTime() + date.getTimezoneOffset() * 60000;
-    const bielMs = utcMs + 3600000;
-
-    // Calculate milliseconds since midnight in Biel
-    const bielDate = new Date(bielMs);
-    const midnight = new Date(bielDate);
-    midnight.setUTCHours(0, 0, 0, 0);
-
-    const msIntoDay = bielMs - midnight.getTime();
-    const beats = Math.floor(msIntoDay / 86400); // 86400ms = 1 beat
+    const beats = Math.floor(getBeats(date));
 
     return {
       type: 'unified',

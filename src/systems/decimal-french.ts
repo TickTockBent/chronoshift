@@ -119,6 +119,28 @@ const decimalFrench: TimeSystemDefinition = {
   tickInterval: 864,
   learnMoreUrl: 'https://en.wikipedia.org/wiki/French_Republican_calendar',
 
+  visual: {
+    type: 'clock',
+    divisions: 10,
+    getHands(date: Date) {
+      const midnight = new Date(date);
+      midnight.setHours(0, 0, 0, 0);
+      const msIntoDay = date.getTime() - midnight.getTime();
+      const fractionOfDay = msIntoDay / 86400000;
+
+      const decimalSeconds = fractionOfDay * 100000;
+      const hours = decimalSeconds / 10000;
+      const minutes = (decimalSeconds % 10000) / 100;
+      const seconds = decimalSeconds % 100;
+
+      return {
+        hour: hours,
+        minute: minutes,
+        second: seconds,
+      };
+    },
+  },
+
   format(date: Date): SplitDisplay {
     const rep = gregorianToRepublican(date);
 

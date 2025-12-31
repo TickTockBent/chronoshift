@@ -162,3 +162,82 @@ body {
   opacity: 1;
   text-decoration: underline;
 }
+
+/* Visual container */
+#time-visual {
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#time-visual:empty {
+  display: none;
+}
+
+/* SVG visuals */
+.visual__svg {
+  display: block;
+}
+
+.visual__svg--bar {
+  width: 200px;
+  height: 12px;
+}
+
+.visual__svg--ring,
+.visual__svg--clock {
+  width: 120px;
+  height: 120px;
+}
+
+/* Progress bar styles */
+.visual__track {
+  fill: #1a1a24;
+}
+
+.visual__fill {
+  fill: #6a9fb5;
+  transition: width 0.1s ease-out;
+}
+
+/* Progress ring styles */
+.visual__svg--ring .visual__track {
+  fill: none;
+  stroke: #1a1a24;
+}
+
+.visual__svg--ring .visual__fill {
+  fill: none;
+  stroke: #6a9fb5;
+  transition: stroke-dashoffset 0.1s ease-out;
+}
+
+/* Clock styles */
+.visual__face {
+  stroke: #333;
+}
+
+.visual__marker {
+  stroke: #444;
+}
+
+.visual__hand {
+  stroke: #e8e8e8;
+}
+
+.visual__hand--hour {
+  stroke: #e8e8e8;
+}
+
+.visual__hand--minute {
+  stroke: #a0a0a0;
+}
+
+.visual__hand--second {
+  stroke: #6a9fb5;
+}
+
+.visual__center {
+  fill: #6a9fb5;
+}
