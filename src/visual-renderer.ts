@@ -3,6 +3,8 @@ import type {
   ProgressBarVisual,
   ProgressRingVisual,
   ClockVisual,
+  TemporalDialVisual,
+  TemporalDialState,
 } from './types';
 
 const VISUAL_SIZE = 120;
@@ -22,6 +24,9 @@ export function renderVisual(
       break;
     case 'clock':
       renderClock(visual, date, container);
+      break;
+    case 'temporal-dial':
+      renderTemporalDial(visual, date, container);
       break;
   }
 }
@@ -230,6 +235,149 @@ function renderClock(
       secondHand.setAttribute('y2', String(center + secondLength * Math.sin(secondRad)));
     }
   }
+}
+
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+const DIAL_OUTER_RADIUS = 58;
+const DIAL_INNER_RADIUS = 32;
+const DIAL_LABEL_FONT_SIZE = 8;
+const DIAL_MAX_SWEEP_RADIANS = 2 * Math.PI - 0.001;
+
+/** Point on a circle around the dial center; angle is radians clockwise from 12 o'clock. */
+function dialPoint(radius: number, angleRadians: number): [number, number] {
+  const center = VISUAL_SIZE / 2;
+  return [
+    center + radius * Math.sin(angleRadians),
+    center - radius * Math.cos(angleRadians),
+  ];
+}
+
+function buildRingSectorPath(startAngle: number, endAngle: number): string {
+  const sweep = Math.min(endAngle - startAngle, DIAL_MAX_SWEEP_RADIANS);
+  const largeArcFlag = sweep > Math.PI ? 1 : 0;
+  const [outerStartX, outerStartY] = dialPoint(DIAL_OUTER_RADIUS, startAngle);
+  const [outerEndX, outerEndY] = dialPoint(DIAL_OUTER_RADIUS, startAngle + sweep);
+  const [innerEndX, innerEndY] = dialPoint(DIAL_INNER_RADIUS, startAngle + sweep);
+  const [innerStartX, innerStartY] = dialPoint(DIAL_INNER_RADIUS, startAngle);
+  return [
+    `M ${outerStartX} ${outerStartY}`,
+    `A ${DIAL_OUTER_RADIUS} ${DIAL_OUTER_RADIUS} 0 ${largeArcFlag} 1 ${outerEndX} ${outerEndY}`,
+    `L ${innerEndX} ${innerEndY}`,
+    `A ${DIAL_INNER_RADIUS} ${DIAL_INNER_RADIUS} 0 ${largeArcFlag} 0 ${innerStartX} ${innerStartY}`,
+    'Z',
+  ].join(' ');
+}
+
+function dialLayoutSignature(dial: TemporalDialState): string {
+  return dial.segments
+    .map((segment) => `${segment.label}:${segment.phase}:${segment.fraction.toFixed(5)}`)
+    .join('|');
+}
+
+function rebuildDialSegments(group: SVGGElement, dial: TemporalDialState): void {
+  group.replaceChildren();
+
+  // Normalize so float error in the input sums cannot leave a gap or overlap.
+  const totalFraction = dial.segments.reduce(
+    (sum, segment) => sum + Math.max(segment.fraction, 0),
+    0
+  );
+  if (totalFraction <= 0) return;
+
+  const midRadius = (DIAL_OUTER_RADIUS + DIAL_INNER_RADIUS) / 2;
+  let cumulativeFraction = 0;
+
+  dial.segments.forEach((segment, index) => {
+    const segmentFraction = Math.max(segment.fraction, 0) / totalFraction;
+    if (segmentFraction <= 0) return;
+
+    const startAngle = cumulativeFraction * 2 * Math.PI;
+    cumulativeFraction += segmentFraction;
+    const endAngle = cumulativeFraction * 2 * Math.PI;
+
+    const path = document.createElementNS(SVG_NAMESPACE, 'path');
+    path.setAttribute(
+      'class',
+      `visual__segment visual__segment--${segment.phase}`
+    );
+    path.setAttribute('data-index', String(index));
+    path.setAttribute('d', buildRingSectorPath(startAngle, endAngle));
+    group.appendChild(path);
+
+    // Skip labels that would not fit along the arc at mid radius.
+    const arcLength = (endAngle - startAngle) * midRadius;
+    if (segment.label && arcLength >= DIAL_LABEL_FONT_SIZE * 1.2 * segment.label.length) {
+      const [labelX, labelY] = dialPoint(midRadius, (startAngle + endAngle) / 2);
+      const text = document.createElementNS(SVG_NAMESPACE, 'text');
+      text.setAttribute('class', 'visual__label');
+      text.setAttribute('data-index', String(index));
+      text.setAttribute('x', String(labelX));
+      text.setAttribute('y', String(labelY));
+      text.setAttribute('text-anchor', 'middle');
+      text.setAttribute('dominant-baseline', 'central');
+      text.setAttribute('font-size', String(DIAL_LABEL_FONT_SIZE));
+      text.textContent = segment.label;
+      group.appendChild(text);
+    }
+  });
+}
+
+function renderTemporalDial(
+  visual: TemporalDialVisual,
+  date: Date,
+  container: HTMLElement
+): void {
+  const dial = visual.getDial(date);
+  const center = VISUAL_SIZE / 2;
+
+  let svg = container.querySelector('.visual__svg') as SVGSVGElement | null;
+  if (!svg) {
+    svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+    svg.setAttribute('class', 'visual__svg visual__svg--dial');
+    svg.setAttribute('viewBox', `0 0 ${VISUAL_SIZE} ${VISUAL_SIZE}`);
+    svg.setAttribute('aria-hidden', 'true');
+
+    const segmentGroup = document.createElementNS(SVG_NAMESPACE, 'g');
+    segmentGroup.setAttribute('class', 'visual__segments');
+    svg.appendChild(segmentGroup);
+
+    const hand = document.createElementNS(SVG_NAMESPACE, 'line');
+    hand.setAttribute('class', 'visual__hand visual__hand--dial');
+    hand.setAttribute('x1', String(center));
+    hand.setAttribute('y1', String(center));
+    hand.setAttribute('stroke-width', '2');
+    hand.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(hand);
+
+    const centerDot = document.createElementNS(SVG_NAMESPACE, 'circle');
+    centerDot.setAttribute('class', 'visual__center');
+    centerDot.setAttribute('cx', String(center));
+    centerDot.setAttribute('cy', String(center));
+    centerDot.setAttribute('r', '3');
+    svg.appendChild(centerDot);
+
+    container.appendChild(svg);
+  }
+
+  // Segment layout shifts day to day; only rebuild when it actually changes.
+  const segmentGroup = svg.querySelector('.visual__segments') as SVGGElement;
+  const layoutSignature = dialLayoutSignature(dial);
+  if (segmentGroup.getAttribute('data-layout') !== layoutSignature) {
+    rebuildDialSegments(segmentGroup, dial);
+    segmentGroup.setAttribute('data-layout', layoutSignature);
+  }
+
+  segmentGroup.querySelectorAll('[data-index]').forEach((element) => {
+    const isActive = element.getAttribute('data-index') === String(dial.activeIndex);
+    element.classList.toggle('visual__segment--active', isActive && element.tagName === 'path');
+    element.classList.toggle('visual__label--active', isActive && element.tagName === 'text');
+  });
+
+  const clampedPosition = Math.min(Math.max(dial.position, 0), 1);
+  const [handX, handY] = dialPoint(DIAL_OUTER_RADIUS - 2, clampedPosition * 2 * Math.PI);
+  const hand = svg.querySelector('.visual__hand--dial') as SVGLineElement;
+  hand.setAttribute('x2', String(handX));
+  hand.setAttribute('y2', String(handY));
 }
 
 export function clearVisual(container: HTMLElement): void {

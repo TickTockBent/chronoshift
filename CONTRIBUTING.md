@@ -107,7 +107,7 @@ For educational breakdowns:
 
 ## Visual Elements (Optional)
 
-Time systems can include an optional visual representation displayed below the text. Three visual types are available:
+Time systems can include an optional visual representation displayed below the text. Four visual types are available:
 
 ### ProgressBarVisual
 
@@ -159,6 +159,29 @@ visual: {
 ```
 
 **Note:** For clocks, `minute` and `second` values should be normalized to 0-100 range regardless of the actual time system. The renderer uses this to calculate hand positions.
+
+### TemporalDialVisual
+
+A ring divided into unequal segments covering one full cycle, with a pointer for the current position (good for systems whose units change length, like seasonal temporal hours):
+
+```typescript
+visual: {
+  type: 'temporal-dial',
+  getDial(date: Date) {
+    return {
+      segments: [
+        { label: '午', fraction: 0.09, phase: 'day' },    // Share of the cycle (all fractions sum to 1)
+        { label: '未', fraction: 0.09, phase: 'day' },
+        // ...one entry per segment, clockwise from 12 o'clock
+      ],
+      position: 0.25,   // Current position in the cycle (0 to 1), from the start of segments[0]
+      activeIndex: 1,   // Index of the segment containing position
+    };
+  },
+},
+```
+
+**Note:** Segments may differ from one call to the next (e.g. day to day), so compute them fresh in `getDial`. Keep labels to 1-2 characters; the renderer omits a label that does not fit its segment. `phase` (`'day'` or `'night'`) controls the segment shading.
 
 ## Guidelines
 

@@ -23,6 +23,7 @@ A minimalist web application displaying current time across various historical a
 | **Swatch Internet Time** | Progress ring | 1000 .beats per day, no time zones |
 | **French Republican** | 10-hour clock | Revolutionary calendar with decimal time |
 | **Holocene Era** | — | Human Era calendar (+10,000 years) |
+| **Wadokei** | Temporal dial | Edo-period Japanese hours: daylight and night each split into six toki that vary with the seasons |
 
 ## Development
 

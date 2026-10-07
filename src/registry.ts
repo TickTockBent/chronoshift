@@ -6,6 +6,7 @@ import kiloseconds from './systems/kiloseconds';
 import swatchBeats from './systems/swatch-beats';
 import decimalFrench from './systems/decimal-french';
 import holocene from './systems/holocene';
+import wadokei from './systems/wadokei';
 
 const systems: TimeSystemDefinition[] = [
   standard,
@@ -14,6 +15,7 @@ const systems: TimeSystemDefinition[] = [
   swatchBeats,
   decimalFrench,
   holocene,
+  wadokei,
 ];
 
 const registry = new Map<string, TimeSystemDefinition>();
