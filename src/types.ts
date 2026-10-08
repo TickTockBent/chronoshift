@@ -37,7 +37,8 @@ export interface TimeSystemDefinition {
 export type VisualDefinition =
   | ProgressBarVisual
   | ProgressRingVisual
-  | ClockVisual;
+  | ClockVisual
+  | TemporalDialVisual;
 
 /**
  * Horizontal progress bar showing elapsed portion of a cycle
@@ -74,6 +75,35 @@ export interface ClockVisual {
     minute: number;
     second?: number;
   };
+}
+
+/**
+ * Dial divided into unequal segments covering one full cycle (e.g. temporal
+ * hours whose lengths change with the seasons). Segments are drawn clockwise
+ * starting at the 12 o'clock position, and a pointer marks the current position.
+ */
+export interface TemporalDialVisual {
+  type: 'temporal-dial';
+  /** Function to get the dial layout and pointer position for a date */
+  getDial(date: Date): TemporalDialState;
+}
+
+export interface TemporalDialState {
+  /**
+   * Ordered segments, clockwise from 12 o'clock. `fraction` is the share of
+   * the full cycle (all fractions sum to 1). Segment layout may differ from
+   * one call to the next (e.g. day to day), so renderers must not cache it.
+   */
+  segments: Array<{
+    /** Short label drawn on the dial (1-2 characters works best) */
+    label: string;
+    fraction: number;
+    phase: 'day' | 'night';
+  }>;
+  /** Current position in the cycle, 0..1, measured from the start of segments[0] */
+  position: number;
+  /** Index into `segments` of the segment containing `position` */
+  activeIndex: number;
 }
 
 export type TimeDisplay = UnifiedDisplay | SplitDisplay | SegmentedDisplay;

@@ -185,6 +185,11 @@ body {
   height: 12px;
 }
 
+.visual__svg--dial {
+  width: 160px;
+  height: 160px;
+}
+
 .visual__svg--ring,
 .visual__svg--clock {
   width: 120px;
@@ -240,4 +245,41 @@ body {
 
 .visual__center {
   fill: #6a9fb5;
+}
+
+/* Temporal dial styles */
+.visual__segment {
+  stroke: #0e0e14;
+  stroke-width: 0.75;
+  stroke-linejoin: round;
+}
+
+.visual__segment--day {
+  fill: #2c3a44;
+}
+
+.visual__segment--night {
+  fill: #15151d;
+}
+
+.visual__segment--active.visual__segment--day {
+  fill: #4a7488;
+}
+
+.visual__segment--active.visual__segment--night {
+  fill: #2a3d4a;
+}
+
+.visual__label {
+  fill: #8a8a96;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.visual__label--active {
+  fill: #e8e8e8;
+}
+
+.visual__hand--dial {
+  stroke: #e8e8e8;
 }
