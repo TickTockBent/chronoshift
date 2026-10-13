@@ -38,7 +38,8 @@ export type VisualDefinition =
   | ProgressBarVisual
   | ProgressRingVisual
   | ClockVisual
-  | TemporalDialVisual;
+  | TemporalDialVisual
+  | TimelineVisual;
 
 /**
  * Horizontal progress bar showing elapsed portion of a cycle
@@ -86,6 +87,29 @@ export interface TemporalDialVisual {
   type: 'temporal-dial';
   /** Function to get the dial layout and pointer position for a date */
   getDial(date: Date): TemporalDialState;
+}
+
+/**
+ * Horizontal timeline of named eras with a "you are here" marker (e.g. the
+ * ages of a fictional history). Positions use any linear unit, such as years.
+ */
+export interface TimelineVisual {
+  type: 'timeline';
+  /** Function to get the timeline layout and marker position for a date */
+  getTimeline(date: Date): TimelineState;
+}
+
+export interface TimelineState {
+  /** Value at the left edge */
+  start: number;
+  /** Value at the right edge */
+  end: number;
+  /** Consecutive eras, left to right; labels are omitted if they do not fit */
+  eras: Array<{ label: string; start: number; end: number }>;
+  /** Labels drawn beneath the timeline (e.g. era boundaries) */
+  ticks: Array<{ at: number; label: string }>;
+  /** Current position, drawn as a pointer with its label above the timeline */
+  marker: { at: number; label: string };
 }
 
 export interface TemporalDialState {

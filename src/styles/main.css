@@ -190,6 +190,11 @@ body {
   height: 160px;
 }
 
+.visual__svg--timeline {
+  width: min(520px, calc(100vw - 2rem));
+  height: auto;
+}
+
 .visual__svg--ring,
 .visual__svg--clock {
   width: 120px;
@@ -282,4 +287,34 @@ body {
 
 .visual__hand--dial {
   stroke: #e8e8e8;
+}
+
+/* Timeline styles */
+.visual__era {
+  stroke: #0e0e14;
+  stroke-width: 1;
+}
+
+.visual__era--even {
+  fill: #1a1a24;
+}
+
+.visual__era--odd {
+  fill: #22222e;
+}
+
+.visual__era--active {
+  fill: #2c3a44;
+}
+
+.visual__tick-label {
+  fill: #666;
+}
+
+.visual__marker-label {
+  fill: #6a9fb5;
+}
+
+.visual__hand--timeline {
+  stroke: #6a9fb5;
 }
