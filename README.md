@@ -24,7 +24,7 @@ A minimalist web application displaying current time across various historical a
 | **French Republican** | 10-hour clock | Revolutionary calendar with decimal time |
 | **Holocene Era** | — | Human Era calendar (+10,000 years) |
 | **Wadokei** | Temporal dial | Edo-period Japanese hours: daylight and night each split into six toki that vary with the seasons |
-| **Imperial Dating** | Progress bar | Warhammer 40,000 dates (e.g. `0 782 026.M3`), counting up to the Emperor's revelation in 000.M30 |
+| **Imperial Dating** | Era timeline | Warhammer 40,000 dates (e.g. `0 782 026.M3`), counting up to the Emperor's revelation in 000.M30 |
 
 ## Development
 

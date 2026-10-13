@@ -17,6 +17,8 @@ import type { TimeSystemDefinition, UnifiedDisplay } from '../types';
  * - The Emperor's revelation, the end of the Age of Strife when he revealed
  *   himself and began the Unification Wars, is dated only "c. M30" in the
  *   lore. We use the start of that millennium, 000.M30 (1 January 29,000 CE).
+ * - Eras are bounded at the start of the named millennium, so "M15" is the
+ *   Gregorian year 14,000. The lore dates them only to the millennium.
  */
 
 const FRACTIONS_PER_HOUR = 0.11407955;
@@ -26,6 +28,27 @@ const CHECK_NUMBER_TERRA = 0;
 /** Gregorian year of the Emperor's revelation, 000.M30 */
 const REVELATION_YEAR = 29000;
 const REVELATION_LABEL = '000.M30';
+
+/** First Gregorian year of an Imperial millennium: M1 is 0, M41 is 40,000 */
+function millenniumStart(millennium: number): number {
+  return (millennium - 1) * 1000;
+}
+
+/** The ages of Terra between M1 and the revelation, per Imperial history */
+const ERAS = [
+  { label: 'Age of Terra', from: 1, to: 15 },
+  { label: 'Dark Age of Technology', from: 15, to: 25 },
+  { label: 'Age of Strife', from: 25, to: 30 },
+].map((era) => ({
+  label: era.label,
+  start: millenniumStart(era.from),
+  end: millenniumStart(era.to),
+}));
+
+const ERA_TICKS = [1, 15, 25, 30].map((millennium) => ({
+  at: millenniumStart(millennium),
+  label: `M${millennium}`,
+}));
 
 function getFractionProgress(date: Date): number {
   const yearStart = Date.UTC(date.getUTCFullYear(), 0, 1);
@@ -48,11 +71,19 @@ const imperialDating: TimeSystemDefinition = {
   learnMoreUrl: 'https://wh40k.lexicanum.com/wiki/Imperial_Dating_System',
 
   visual: {
-    type: 'progress-bar',
-    max: 1,
-    getValue(date: Date) {
-      // Progress through the current year fraction (8.766 hours)
-      return getFractionProgress(date) % 1;
+    type: 'timeline',
+    getTimeline(date: Date) {
+      const year = date.getUTCFullYear();
+      return {
+        start: millenniumStart(1),
+        end: REVELATION_YEAR,
+        eras: ERAS,
+        ticks: ERA_TICKS,
+        marker: {
+          at: year + getFractionProgress(date) / FRACTIONS_PER_YEAR,
+          label: `${pad3(year % 1000)}.M${Math.floor(year / 1000) + 1}`,
+        },
+      };
     },
   },
 

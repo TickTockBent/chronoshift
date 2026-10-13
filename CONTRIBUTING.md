@@ -107,7 +107,7 @@ For educational breakdowns:
 
 ## Visual Elements (Optional)
 
-Time systems can include an optional visual representation displayed below the text. Four visual types are available:
+Time systems can include an optional visual representation displayed below the text. Five visual types are available:
 
 ### ProgressBarVisual
 
@@ -182,6 +182,30 @@ visual: {
 ```
 
 **Note:** Segments may differ from one call to the next (e.g. day to day), so compute them fresh in `getDial`. Keep labels to 1-2 characters; the renderer omits a label that does not fit its segment. `phase` (`'day'` or `'night'`) controls the segment shading.
+
+### TimelineVisual
+
+A horizontal strip of named eras with a "you are here" marker (good for systems that count toward or away from a historical point):
+
+```typescript
+visual: {
+  type: 'timeline',
+  getTimeline(date: Date) {
+    return {
+      start: 0,          // Value at the left edge (any linear unit, e.g. years)
+      end: 29000,        // Value at the right edge
+      eras: [
+        { label: 'Age of Terra', start: 0, end: 14000 },  // Left to right
+        // ...
+      ],
+      ticks: [{ at: 14000, label: 'M15' }],  // Labels beneath the strip
+      marker: { at: 2026.78, label: '026.M3' },  // Current position
+    };
+  },
+},
+```
+
+**Note:** The era containing the marker is highlighted. An era label that does not fit its era is omitted.
 
 ## Guidelines
 

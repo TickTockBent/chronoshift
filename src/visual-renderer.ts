@@ -5,6 +5,8 @@ import type {
   ClockVisual,
   TemporalDialVisual,
   TemporalDialState,
+  TimelineVisual,
+  TimelineState,
 } from './types';
 
 const VISUAL_SIZE = 120;
@@ -27,6 +29,9 @@ export function renderVisual(
       break;
     case 'temporal-dial':
       renderTemporalDial(visual, date, container);
+      break;
+    case 'timeline':
+      renderTimeline(visual, date, container);
       break;
   }
 }
@@ -378,6 +383,155 @@ function renderTemporalDial(
   const hand = svg.querySelector('.visual__hand--dial') as SVGLineElement;
   hand.setAttribute('x2', String(handX));
   hand.setAttribute('y2', String(handY));
+}
+
+const TIMELINE_WIDTH = 400;
+const TIMELINE_HEIGHT = 64;
+const TIMELINE_BAND_Y = 22;
+const TIMELINE_BAND_HEIGHT = 18;
+const TIMELINE_FONT_SIZE = 9;
+/** Rough glyph width as a share of font size, for fit checks and edge clamping */
+const TIMELINE_GLYPH_WIDTH = 0.55;
+
+function timelineX(timeline: TimelineState, value: number): number {
+  const span = timeline.end - timeline.start;
+  if (span <= 0) return 0;
+  const fraction = Math.min(Math.max((value - timeline.start) / span, 0), 1);
+  return fraction * TIMELINE_WIDTH;
+}
+
+function timelineText(
+  className: string,
+  x: number,
+  y: number,
+  label: string,
+  anchor: 'start' | 'middle' | 'end' = 'middle'
+): SVGTextElement {
+  const text = document.createElementNS(SVG_NAMESPACE, 'text');
+  text.setAttribute('class', className);
+  text.setAttribute('x', String(x));
+  text.setAttribute('y', String(y));
+  text.setAttribute('text-anchor', anchor);
+  text.setAttribute('dominant-baseline', 'central');
+  text.setAttribute('font-size', String(TIMELINE_FONT_SIZE));
+  text.textContent = label;
+  return text;
+}
+
+function timelineLayoutSignature(timeline: TimelineState): string {
+  const eras = timeline.eras.map((era) => `${era.label}:${era.start}:${era.end}`);
+  const ticks = timeline.ticks.map((tick) => `${tick.label}:${tick.at}`);
+  return [timeline.start, timeline.end, eras.join('|'), ticks.join('|')].join('/');
+}
+
+function rebuildTimeline(group: SVGGElement, timeline: TimelineState): void {
+  group.replaceChildren();
+
+  timeline.eras.forEach((era, index) => {
+    const x1 = timelineX(timeline, era.start);
+    const x2 = timelineX(timeline, era.end);
+    if (x2 <= x1) return;
+
+    const rect = document.createElementNS(SVG_NAMESPACE, 'rect');
+    rect.setAttribute('class', `visual__era visual__era--${index % 2 ? 'odd' : 'even'}`);
+    rect.setAttribute('data-index', String(index));
+    rect.setAttribute('x', String(x1));
+    rect.setAttribute('y', String(TIMELINE_BAND_Y));
+    rect.setAttribute('width', String(x2 - x1));
+    rect.setAttribute('height', String(TIMELINE_BAND_HEIGHT));
+    group.appendChild(rect);
+
+    const labelWidth = era.label.length * TIMELINE_FONT_SIZE * TIMELINE_GLYPH_WIDTH;
+    if (era.label && labelWidth + 2 <= x2 - x1) {
+      const label = timelineText(
+        'visual__label',
+        (x1 + x2) / 2,
+        TIMELINE_BAND_Y + TIMELINE_BAND_HEIGHT / 2,
+        era.label
+      );
+      label.setAttribute('data-index', String(index));
+      group.appendChild(label);
+    }
+  });
+
+  timeline.ticks.forEach((tick) => {
+    const x = timelineX(timeline, tick.at);
+    // Keep edge labels inside the viewBox.
+    const anchor = x <= 0 ? 'start' : x >= TIMELINE_WIDTH ? 'end' : 'middle';
+    group.appendChild(
+      timelineText(
+        'visual__tick-label',
+        x,
+        TIMELINE_BAND_Y + TIMELINE_BAND_HEIGHT + 8,
+        tick.label,
+        anchor
+      )
+    );
+  });
+}
+
+function renderTimeline(
+  visual: TimelineVisual,
+  date: Date,
+  container: HTMLElement
+): void {
+  const timeline = visual.getTimeline(date);
+
+  let svg = container.querySelector('.visual__svg') as SVGSVGElement | null;
+  if (!svg) {
+    svg = document.createElementNS(SVG_NAMESPACE, 'svg');
+    svg.setAttribute('class', 'visual__svg visual__svg--timeline');
+    svg.setAttribute('viewBox', `0 0 ${TIMELINE_WIDTH} ${TIMELINE_HEIGHT}`);
+    svg.setAttribute('aria-hidden', 'true');
+
+    const layoutGroup = document.createElementNS(SVG_NAMESPACE, 'g');
+    layoutGroup.setAttribute('class', 'visual__eras');
+    svg.appendChild(layoutGroup);
+
+    const pointer = document.createElementNS(SVG_NAMESPACE, 'line');
+    pointer.setAttribute('class', 'visual__hand visual__hand--timeline');
+    pointer.setAttribute('y1', String(TIMELINE_BAND_Y - 6));
+    pointer.setAttribute('y2', String(TIMELINE_BAND_Y + TIMELINE_BAND_HEIGHT));
+    pointer.setAttribute('stroke-width', '2');
+    pointer.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(pointer);
+
+    svg.appendChild(timelineText('visual__marker-label', 0, TIMELINE_BAND_Y - 12, ''));
+
+    container.appendChild(svg);
+  }
+
+  const layoutGroup = svg.querySelector('.visual__eras') as SVGGElement;
+  const layoutSignature = timelineLayoutSignature(timeline);
+  if (layoutGroup.getAttribute('data-layout') !== layoutSignature) {
+    rebuildTimeline(layoutGroup, timeline);
+    layoutGroup.setAttribute('data-layout', layoutSignature);
+  }
+
+  const activeIndex = timeline.eras.findIndex(
+    (era) => timeline.marker.at >= era.start && timeline.marker.at < era.end
+  );
+  layoutGroup.querySelectorAll('[data-index]').forEach((element) => {
+    const isActive = element.getAttribute('data-index') === String(activeIndex);
+    element.classList.toggle('visual__era--active', isActive && element.tagName === 'rect');
+    element.classList.toggle('visual__label--active', isActive && element.tagName === 'text');
+  });
+
+  const markerX = timelineX(timeline, timeline.marker.at);
+  const pointer = svg.querySelector('.visual__hand--timeline') as SVGLineElement;
+  pointer.setAttribute('x1', String(markerX));
+  pointer.setAttribute('x2', String(markerX));
+
+  // Center the label over the pointer, but keep it inside the viewBox.
+  const halfLabelWidth =
+    (timeline.marker.label.length * TIMELINE_FONT_SIZE * TIMELINE_GLYPH_WIDTH) / 2;
+  const labelX = Math.min(
+    Math.max(markerX, halfLabelWidth),
+    TIMELINE_WIDTH - halfLabelWidth
+  );
+  const markerLabel = svg.querySelector('.visual__marker-label') as SVGTextElement;
+  markerLabel.setAttribute('x', String(labelX));
+  markerLabel.textContent = timeline.marker.label;
 }
 
 export function clearVisual(container: HTMLElement): void {
